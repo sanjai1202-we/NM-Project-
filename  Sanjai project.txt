@@ -1,0 +1,65 @@
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# Step 1: Define the dataset
+data = {
+    'weather': ['Clear', 'Rainy', 'Foggy'],
+    'road_condition': ['Dry', 'Wet', 'Icy'],
+    'time_of_day': ['Morning', 'Night', 'Evening'],
+    'vehicle_speed': [65, 80, 55],
+    'accident_severity': ['Low', 'High', 'Medium']
+}
+
+# Convert to DataFrame
+df = pd.DataFrame(data)
+print("✅ Dataset created:\n", df)
+
+# Step 2: Encode categorical columns
+le_weather = LabelEncoder()
+le_road = LabelEncoder()
+le_time = LabelEncoder()
+le_severity = LabelEncoder()
+
+df['weather'] = le_weather.fit_transform(df['weather'])
+df['road_condition'] = le_road.fit_transform(df['road_condition'])
+df['time_of_day'] = le_time.fit_transform(df['time_of_day'])
+df['accident_severity'] = le_severity.fit_transform(df['accident_severity'])
+
+# Step 3: Split features and target
+X = df.drop('accident_severity', axis=1)
+y = df['accident_severity']
+
+# Step 4: Train/test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+# Step 5: Train the model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Step 6: Evaluate the model
+y_pred = model.predict(X_test)
+print("\n🔍 Model Evaluation")
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Classification Report:\n", classification_report(y_test, y_pred, target_names=le_severity.classes_))
+
+# Step 7: Predict a new accident case
+new_input = {
+    'weather': ['Rainy'],
+    'road_condition': ['Wet'],
+    'time_of_day': ['Night'],
+    'vehicle_speed': [78]
+}
+new_df = pd.DataFrame(new_input)
+
+# Encode new input
+new_df['weather'] = le_weather.transform(new_df['weather'])
+new_df['road_condition'] = le_road.transform(new_df['road_condition'])
+new_df['time_of_day'] = le_time.transform(new_df['time_of_day'])
+
+# Predict and decode result
+prediction = model.predict(new_df)[0]
+predicted_severity = le_severity.inverse_transform([prediction])[0]
+print("\n🔮 Predicted Accident Severity:", predicted_severity)
